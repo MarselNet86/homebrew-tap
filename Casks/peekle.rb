@@ -15,7 +15,8 @@ cask "peekle" do
     strategy :github_latest
   end
 
-  depends_on macos: ">= :ventura"
+  # 13.0 or newer, the bundle's minimumSystemVersion.
+  depends_on macos: :ventura
 
   app "Peekle.app"
 
@@ -23,8 +24,8 @@ cask "peekle" do
   # downloads as quarantined, and Gatekeeper would refuse the app on its
   # first launch; clearing the mark is what makes this the supported way to
   # install.
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-cr", "#{appdir}/Peekle.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-cr", "{{appdir}}/Peekle.app"]
   end
 
   uninstall quit: "app.peekle.overlay"
