@@ -1,9 +1,11 @@
-# Rendered from packaging/homebrew/peekle.rb in MarselNet86/peekle. From
-# 0.1.4 on, release.yml attaches the rendered cask to every release and
-# bump.yml copies it here; edit the template there, never this file.
+# Peekle's Homebrew cask. This file is the source; the tap
+# (MarselNet86/homebrew-tap) carries the copy that release.yml renders on
+# every tag: the version and the checksum of the dmg fill the two
+# placeholders and the result is attached to the release as `peekle.rb`.
+# Edit here, never in the tap. tech.md 6.27, "Homebrew".
 cask "peekle" do
-  version "0.1.3"
-  sha256 "a72c8f6ef35c700c4d5f80418454c405d3f670085ba85c7afc454ce0daec5c0f"
+  version "0.1.4"
+  sha256 "ff2187a346929fa5c68712b1e71b5afbd79907c4250590cd209d49e34e5a45d4"
 
   url "https://github.com/MarselNet86/peekle/releases/download/v#{version}/Peekle-mac-universal.dmg"
   name "Peekle"
@@ -19,11 +21,13 @@ cask "peekle" do
   depends_on macos: :ventura
 
   app "Peekle.app"
+  # The command that wires the hooks ships inside the bundle. tech.md 6.27.
+  binary "#{appdir}/Peekle.app/Contents/MacOS/peekle"
 
-  # The bundle is signed ad hoc, not notarized. Homebrew marks what it
-  # downloads as quarantined, and Gatekeeper would refuse the app on its
-  # first launch; clearing the mark is what makes this the supported way to
-  # install.
+  # The bundle is signed ad hoc, not notarized (tech.md R-7). Homebrew marks
+  # what it downloads as quarantined, and Gatekeeper would refuse the app on
+  # its first launch; clearing the mark is what makes this the supported way
+  # to install.
   postflight_steps do
     run "/usr/bin/xattr", args: ["-cr", "{{appdir}}/Peekle.app"]
   end
@@ -40,11 +44,8 @@ cask "peekle" do
   ]
 
   caveats <<~EOS
-    Peekle listens to Claude Code through hooks. The `peekle` command that
-    wires them ships inside the app from 0.1.4; for this version build it
-    once with cargo, then:
+    Peekle listens to Claude Code through hooks. Wire them in once:
 
-      cargo install --git https://github.com/MarselNet86/peekle peekle-cli
       peekle init
 
     Then open Peekle. `peekle uninstall` takes the hooks out again.
