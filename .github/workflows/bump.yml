@@ -1,0 +1,42 @@
+name: bump
+
+# Copies the cask Peekle's release workflow rendered. release.yml over there
+# attaches `peekle.rb` to every release; this job takes the one from the
+# latest release and commits it when it differs. Hourly and on demand, with
+# this repository's own token: no secret crosses repositories.
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  peekle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Take the cask from the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release view --repo MarselNet86/peekle --json tagName -q .tagName)
+          if ! gh release download "$tag" --repo MarselNet86/peekle --pattern peekle.rb --output Casks/peekle.rb --clobber; then
+            echo "$tag carries no peekle.rb, nothing to do"
+            exit 0
+          fi
+          ruby -c Casks/peekle.rb
+
+      - name: Commit when it changed
+        run: |
+          if git diff --quiet; then
+            echo "the cask is current"
+            exit 0
+          fi
+          version=$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/peekle.rb)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "peekle $version"
+          git push
